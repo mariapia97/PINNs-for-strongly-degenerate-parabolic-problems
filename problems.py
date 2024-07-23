@@ -29,9 +29,11 @@ if number_of_test == 1:
                     'config_name': 'test_1',
     }
 
+    # Analytical solution function
     def analytical_solution(t, x, y):
         return (1/2)*(x**2 + y**2) + t
 
+    # Initial conditions function
     def initial_condition(inputs, preds, cf):
         t = tf.expand_dims(inputs[...,0], axis=1)
         x = tf.expand_dims(inputs[...,1], axis=1)
@@ -42,6 +44,7 @@ if number_of_test == 1:
         error = tf.reduce_mean((ic - preds)**2)
         return error
 
+    # Boundary conditions function
     def boundary_condition(inputs, preds):
         t = tf.expand_dims(inputs[...,0], axis=1)
         x = tf.expand_dims(inputs[...,1], axis=1)    
@@ -52,10 +55,11 @@ if number_of_test == 1:
         error = tf.reduce_mean((bc - preds)**2)
         return  error
 
+    # Residual of the physical problem
     def f(grads, div, inputs):
         return tf.reduce_mean((grads[...,0] - div - 1.)**2)
 
-
+    # PINN function call with specific arguments
     PINN_2D(problem_dict, f,
                     initial_condition, 
                     boundary_condition,
@@ -79,11 +83,14 @@ elif number_of_test == 2:
                     'config_name': 'test_2',
     }
 
+    # Choose which alpha you wants to use
     alpha = 1/2
 
+    # Analytical solution function
     def analytical_solution(t, x, y):
         return t*(x**2 + y**2)**alpha
 
+    # Initial conditions function
     def initial_condition(inputs, preds, cf):
         t = tf.expand_dims(inputs[...,0], axis=1)
 
@@ -92,6 +99,7 @@ elif number_of_test == 2:
         error = tf.reduce_mean((ic - preds)**2)
         return error
 
+    # Boundary conditions function
     def boundary_condition(inputs, preds):
         t = tf.expand_dims(inputs[...,0], axis=1)
         x = tf.expand_dims(inputs[...,1], axis=1)    
@@ -103,6 +111,7 @@ elif number_of_test == 2:
 
         return error
 
+    # Residual of the physical problem
     def f(grads, div, inputs):
         if (np.any(2*(alpha)*inputs[...,0]*(inputs[...,1]**2 + 
                     inputs[...,2]**2)**(alpha-(1/2)) <= 1) & np.any(inputs[...,1]**2 + inputs[...,2]**2 <= 1.)):
@@ -116,6 +125,7 @@ elif number_of_test == 2:
                             1./(tf.math.sqrt(inputs[...,1]**2 + inputs[...,2]**2)))**2)
         return f
 
+    # Pinn function call
     PINN_2D(problem_dict, f,
                     initial_condition, 
                     boundary_condition,
@@ -138,13 +148,14 @@ elif number_of_test == 3:
                     'config_name': 'test_3',
     }
 
+    # Analytical solution function
     def analytical_solution(t, x, y):
         cond = tf.logical_and(tf.logical_and(tf.less_equal(x, 0.), tf.greater_equal(x, -1.)),
                             tf.logical_and(tf.less_equal(y, 1.), tf.greater_equal(y, -1.))) 
         sol = tf.where(cond, 1. + t, 1. -x + t)
         return sol
 
-
+    # Initial conditions function
     def initial_condition(inputs, preds, cf):
         t = tf.expand_dims(inputs[...,0], axis=1)
         x = tf.expand_dims(inputs[...,1], axis=1)
@@ -165,6 +176,7 @@ elif number_of_test == 3:
         error2 = tf.reduce_mean((ic2 - preds)**2)
         return error + error2
 
+    # Boundary conditions function
     def boundary_condition(inputs, preds):
         t = tf.expand_dims(inputs[...,0], axis=1)
         x = tf.expand_dims(inputs[...,1], axis=1)    
@@ -196,9 +208,11 @@ elif number_of_test == 3:
 
         return  error + error2 + error3 + error4 + error5 + error6
 
+    # Residual of the physical problem
     def f(grads, div, inputs):
         return tf.reduce_mean((grads[...,0] - div - 1.)**2)
 
+    # PINN function call
     PINN_2D(problem_dict, f,
                     initial_condition, 
                     boundary_condition,
