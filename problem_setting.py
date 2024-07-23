@@ -26,6 +26,7 @@ os.environ['PYTHONHASHSEED'] = str(SEED)
 random.seed(SEED)
 np.random.seed(SEED)
 
+# Use of the PINN for the studied problem
 def PINN_2D(problem_dict, f,
                 initial_condition, boundary_condition,
                 analytical_solution=None):
@@ -110,7 +111,7 @@ def PINN_2D(problem_dict, f,
     sol_i = U[i,:,:]
     plot_slice_2D(cf, i, sol_i, X, Y, Analytic = False)
 
-
+# Create a dense model
 def model_pde(cf):
     if cf.ker_reg is not None:
         ker_reg = tf.keras.regularizers.L2(cf.ker_reg)
@@ -121,7 +122,6 @@ def model_pde(cf):
     inputs = Input(shape=(cf.input_dims))
 
     # Hidden layers
-
     x = Dense(20,activation='tanh', name='hidden1', 
                 kernel_initializer='glorot_uniform',
                 kernel_regularizer=ker_reg)(inputs)
@@ -139,22 +139,21 @@ def model_pde(cf):
                 kernel_regularizer=ker_reg)(x)
 
     # Output layer 
-
     outputs = Dense(1, activation='linear', name='output',
                     kernel_regularizer=ker_reg)(x)
 
     # Create the model
-
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
 
     return model    
 
 
-
+# Create the loss function
 def loss_2D(inputs, model, cf, f,
             initial_condition, boundary_condition):
     
+    # Compute the gradient using GradientTape
     with tf.GradientTape(persistent=True) as tape:
         tape.watch(inputs)        
         preds = model(inputs)
@@ -169,7 +168,7 @@ def loss_2D(inputs, model, cf, f,
         norm = grads[:,:,0]/(tf.constant(Du.numpy().reshape(-1,1))) 
         prod = tf.constant(PositivePart.numpy().reshape(-1,1))*norm
     
-        # compute divergence of the vector field using GradientTape
+        # Compute divergence of the vector field using GradientTape
         with tf.GradientTape(persistent=True) as tape2:
             tape2.watch(inputs[:,:,0])
 
@@ -188,6 +187,7 @@ def loss_2D(inputs, model, cf, f,
 
 
     reg = tf.reduce_sum(model.losses)
+    # Loss 
     loss =  ic + bc + residual + reg
 
     return {'loss': loss, 
@@ -233,7 +233,7 @@ def train_step(inputs, model, cf, opt, f,
     del loss_tape
     return loss_dict
 
-
+# Train function
 def train(inputs, model, cf, f,
                 initial_condition, boundary_condition):
     import time
@@ -304,6 +304,8 @@ def train(inputs, model, cf, f,
     
     return best_dict, model
 
+
+# Plot function
 def plot_slice_2D(cf, i, Sol_i, X, Y, Analytic = True):    
 
     X_i = X[i,:,:]
